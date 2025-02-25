@@ -13,76 +13,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id             String          @id @default(uuid())
-  email          String          @unique
-  firstName      String
-  lastName       String
-  address        String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  orders         Order[]
-  userPreference UserPreference?
-  savedProducts  Product[]
+model Style {
+  id        String      @id @default(uuid())
+  title     String
+  nickname  String
+  password  String
+  content   String
+  tags      String[]
+  imageUrls String[]
+  viewCount Int
+  createdAt DateTime    @default(now())
+  curating  Curating[]
+  styleItem StyleItem[]
 }
 
-model Product {
-  id          String      @id @default(uuid())
-  name        String
-  description String?
-  category    Category
-  price       Float
-  stock       Int
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
-  savedUsers  User[]
+model Curating {
+  id                String   @id @default(uuid())
+  nickname          String
+  password          String
+  content           String
+  trendy            Int
+  personality       Int
+  practicality      Int
+  costEffectiveness Int
+  createdAt         DateTime @default(now())
+  style             Style    @relation(fields: [styleId], references: [id], onDelete: Cascade)
+  styleId           String
+  comment           Comment?
 }
 
-model UserPreference {
-  id           String   @id @default(uuid())
-  receiveEmail Boolean
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String   @unique
+model Comment {
+  id         String   @id @default(uuid())
+  password   String
+  content    String
+  createdAt  DateTime @default(now())
+  curating   Curating @relation(fields: [curatingId], references: [id], onDelete: Cascade)
+  curatingId String   @unique
 }
 
-model Order {
-  id         String      @id @default(uuid())
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId     String?
-  orderItems OrderItem[]
+model StyleItem {
+  id      String        @id @default(uuid())
+  type    StyleItemType
+  name    String
+  brand   String
+  price   Float
+  style   Style         @relation(fields: [styleId], references: [id], onDelete: Cascade)
+  styleId String
 }
 
-// Order가 삭제되면 Order를 구성하는 OrderItem도 모두 삭제
-// Product가 삭제되면 해당 Product를 가리키는 OrderItem의 productId는 NULL이 되도록 해 주세요
-model OrderItem {
-  id        String   @id @default(uuid())
-  unitPrice Float
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId   String
-  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-  productId String?
-}
-
-enum OrderStatus {
-  PENDING
-  COMPLETE
-}
-
-enum Category {
-  FASHION
-  BEAUTY
-  SPORTS
-  ELECTRONICS
-  HOME_INTERIOR
-  HOUSEHOLD_SUPPLIES
-  KITCHENWARE
+enum StyleItemType {
+  TOP
+  BOTTOM
+  OUTER
+  DRESS
+  SHOES
+  BAG
+  ACCESSORY
 }
