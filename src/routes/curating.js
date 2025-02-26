@@ -1,8 +1,8 @@
 import express from "express";
-import asyncHandler from "../async-handler.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import { PrismaClient } from "@prisma/client";
 import { assert } from "superstruct";
-import { CreateUser, PatchUser, CreateSavedProduct } from "../structs.js";
+import { CreateUser, PatchUser, CreateSavedProduct } from "../utils/structs.js";
 
 const prisma = new PrismaClient();
 const userRouter = express.Router();
