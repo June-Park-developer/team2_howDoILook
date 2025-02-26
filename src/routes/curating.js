@@ -5,91 +5,169 @@ import { assert } from "superstruct";
 import { CreateUser, PatchUser, CreateSavedProduct } from "../utils/structs.js";
 
 const prisma = new PrismaClient();
-const curationRouter = express.Router();
+const userRouter = express.Router();
 
-curationRouter
-  .route("styles/:styleId/curations")
+userRouter
+  .route("/")
   .get(
     asyncHandler(async (req, res) => {
-      const { styleId } = req.params;
-      const {
-        page = 1,
-        pageSize = 5,
-        searchBy = "content",
-        keyword = "",
-      } = req.query; // ? : default 값 더 개선시킬 순 없을까?
-      const offset = parseInt(pageSize) * (parseInt(page) - 1);
-      let where;
-      switch (searchBy) {
-        case "nickname":
-          where = { nickname: { contains: keyword } };
+      const { offset = 0, limit = 10, order = "newest" } = req.query;
+      let orderBy;
+      switch (order) {
+        case "oldest":
+          orderBy = { createdAt: "asc" };
           break;
-        case "content":
-          where = { content: { contains: keyword } };
-          break;
+        case "newest":
+          orderBy = { createdAt: "desc" };
         default:
-          throw new Error(); // To-do : 어떤 에러 던질지 결정
+          orderBy = { createdAt: "desc" };
       }
-      const curations = await prisma.curation.findMany({
-        skip: offset,
-        take: parseInt(pageSize),
-        where,
-      });
-      res.json(curations);
-    })
-  )
-  .post(
-    asyncHandler(async (req, res) => {
-      assert(req.body, CreateCuration); // To-do: CreateCuration 만들고 import
-      const { styleId } = req.params;
-      const curation = await prisma.curation.create({
-        data: {
-          ...req.body,
-          style: {
-            connect: { id: styleId },
+      const users = await prisma.user.findMany({
+        orderBy,
+        skip: parseInt(offset),
+        take: parseInt(limit),
+        include: {
+          userPreference: {
+            select: {
+              receiveEmail: true,
+            },
           },
         },
       });
-      res.status(201).json(curation);
+      res.send(users);
     })
+  )
+  .post(
+    asyncHandler(
+      asyncHandler(async (req, res) => {
+        assert(req.body, CreateUser);
+        const { userPreference, ...userFields } = req.body;
+        const user = await prisma.user.create({
+          data: {
+            ...userFields,
+            userPreference: {
+              create: userPreference,
+            },
+          },
+          include: {
+            userPreference: true,
+          },
+        });
+        res.status(201).send(user);
+      })
+    )
   );
 
-curationRouter
-  .route("/curations/:curationId")
-  .put(
+userRouter
+  .route("/:id")
+  .get(
     asyncHandler(async (req, res) => {
-      assert(req.body, PatchCuration); // To-do: PatchCuration 만들고 import
-      const { curationId } = req.params;
-      const { password } = req.body;
-      const matchingCuration = await prisma.curation.findUniqueOrThrow({
-        where: { id: curationId },
+      const { id } = req.params;
+      // Destructuring assignment
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id },
+        include: {
+          userPreference: {
+            select: {
+              receiveEmail: true,
+            },
+          },
+        },
       });
-      if (matchingCuration.password !== password) {
-        return res.status(403).json({ message: "비밀번호가 틀렸습니다." }); // ? : 오류처리 개선 필요
-      }
-      const curation = await prisma.curation.update({
-        where: { id: curationId },
-        data: req.body,
+      console.log(user);
+      res.send(user);
+    })
+  )
+  .patch(
+    asyncHandler(async (req, res) => {
+      const { id } = req.params;
+      assert(req.body, PatchUser);
+
+      const { userPreference, ...userFields } = req.body;
+      const user = await prisma.user.update({
+        where: { id },
+        data: {
+          ...userFields,
+          userPreference: {
+            update: userPreference,
+          },
+        },
+        include: {
+          userPreference: true,
+        },
       });
-      res.json(curation);
+      res.send(user);
     })
   )
   .delete(
     asyncHandler(async (req, res) => {
-      assert(req.body, DeleteCuration); // To-do: DeleteCuration 만들고 import하기
-      const { curationId } = req.params;
-      const { password } = req.body;
-      const matchingCuration = await prisma.curation.findUniqueOrThrow({
-        where: { id: curationId },
+      const { id } = req.params;
+      await prisma.user.delete({
+        where: { id },
       });
-      if (matchingCuration.password !== password) {
-        return res.status(403).json({ message: "비밀번호가 틀렸습니다." }); // ? : 오류처리 개선 필요
-      }
-      const curation = await prisma.curation.delete({
-        where: { id: curationId },
-      });
-      res.json({ message: "큐레이팅 삭제 끝" });
+      res.send("Success delete");
     })
   );
 
-export default curationRouter;
+userRouter
+  .route("/:id/saved-products")
+  .get(
+    asyncHandler(async (req, res) => {
+      const { id } = req.params;
+      const { savedProducts } = await prisma.user.findUniqueOrThrow({
+        where: { id },
+        include: {
+          savedProducts: true,
+        },
+      });
+      res.send(savedProducts);
+    })
+  )
+  .post(
+    asyncHandler(async (req, res) => {
+      assert(req.body, CreateSavedProduct);
+      const { id: userId } = req.params;
+      const { productId } = req.body;
+
+      const savedCount = await prisma.user.count({
+        where: {
+          id: userId,
+          savedProducts: {
+            some: { id: productId },
+          },
+        },
+      });
+
+      const condition =
+        savedCount > 0
+          ? { disconnect: { id: productId } }
+          : { connect: { id: productId } };
+
+      const { savedProducts } = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          savedProducts: condition,
+        },
+        include: {
+          savedProducts: true,
+        },
+      });
+
+      res.send(savedProducts);
+    })
+  );
+
+userRouter.route("/:id/orders").get(
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { orders } = await prisma.user.findUniqueOrThrow({
+      where: { id },
+      include: {
+        orders: true,
+      },
+    });
+    res.send(orders);
+  })
+);
+
+export default userRouter;
