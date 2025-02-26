@@ -1,46 +1,33 @@
 import { PrismaClient } from "@prisma/client";
-import {
-  USERS,
-  USER_PREFERENCES,
-  PRODUCTS,
-  ORDERS,
-  ORDER_ITEMS,
-} from "./mock.js";
+import { STYLES, CURATINGS, COMMENTS, STYLEITEMS } from "./mock.js";
 
 const prisma = new PrismaClient();
 
 async function main() {
   // 기존 데이터 삭제
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.userPreference.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.product.deleteMany();
+  await prisma.style.deleteMany();
+  await prisma.curating.deleteMany();
+  await prisma.comment.deleteMany();
+  await prisma.styleItem.deleteMany();
 
   // 목 데이터 삽입
-  await prisma.product.createMany({
-    data: PRODUCTS,
+  await prisma.style.createMany({
+    data: STYLES,
     skipDuplicates: true,
   });
 
-  await Promise.all(
-    USERS.map(async (user) => {
-      await prisma.user.create({ data: user });
-    })
-  );
-
-  await prisma.userPreference.createMany({
-    data: USER_PREFERENCES,
+  await prisma.curating.createMany({
+    data: CURATINGS,
     skipDuplicates: true,
   });
 
-  await prisma.order.createMany({
-    data: ORDERS,
+  await prisma.comment.createMany({
+    data: COMMENTS,
     skipDuplicates: true,
   });
 
-  await prisma.orderItem.createMany({
-    data: ORDER_ITEMS,
+  await prisma.styleItem.createMany({
+    data: STYLEITEMS,
     skipDuplicates: true,
   });
 }
