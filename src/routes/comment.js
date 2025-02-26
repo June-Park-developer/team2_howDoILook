@@ -8,7 +8,7 @@ const commentRouter = express.Router();
 
 async function confirmPassword(commentId, password) {
   const comment = await prisma.comment.findUniqueOrThrow({
-    where: { commentId },
+    where: { id: commentId },
   });
   if (comment.password != password) {
     const e = new Error();
@@ -23,18 +23,22 @@ commentRouter
     asyncHandler(async (req, res) => {
       const { commentId } = req.params;
       assert(req.body, CreateComment);
-
+      console.log("after assert");
       const { content, password } = req.body;
       await confirmPassword(commentId, password);
       const comment = await prisma.comment.update({
-        where: { commentId },
+        where: { id: commentId },
         data: {
           content: content,
         },
       });
-      console.log(comment);
-      //return json struct
-      res.send(comment);
+      const returnJson = {
+        id: comment.id,
+        password: comment.password,
+        content: comment.content,
+        createdAt: comment.createdAt,
+      };
+      res.send(returnJson);
     })
   )
   .delete(
@@ -43,8 +47,8 @@ commentRouter
       assert(req.body, Password);
       const { password } = req.body;
       await confirmPassword(commentId, password);
-      await prisma.user.delete({
-        where: { commentId },
+      await prisma.comment.delete({
+        where: { id: commentId },
       });
       res.send({ message: "답글 삭제 성공" });
     })

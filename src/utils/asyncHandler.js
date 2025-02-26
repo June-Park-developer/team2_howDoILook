@@ -8,10 +8,10 @@ export default function asyncHandler(handler) {
       console.log("Error occured");
       console.log(e);
       if (
-        e.name === "StructError" || // 1.
+        e.name === "StructError" ||
         (e instanceof Prisma.PrismaClientKnownRequestError &&
-          e.code === "P2002") || // 2.
-        e instanceof Prisma.PrismaClientValidationError // 3.
+          e.code === "P2002") ||
+        e instanceof Prisma.PrismaClientValidationError
       ) {
         res.status(400).send({ message: "잘못된 요청입니다" });
       } else if (

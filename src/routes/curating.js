@@ -18,9 +18,13 @@ curationRouter.route("/:curationId/comments").post(
         curationId: curationId,
       },
     });
-    console.log(comment);
-    //return json struct
-    res.send(comment);
+    const returnJson = {
+      id: comment.id,
+      password: comment.password,
+      content: comment.content,
+      createdAt: comment.createdAt,
+    };
+    res.send(returnJson);
   })
 );
 
