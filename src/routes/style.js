@@ -2,10 +2,10 @@ import express from "express";
 import asyncHandler from "../async-handler.js";
 import { PrismaClient } from "@prisma/client";
 import { assert } from "superstruct";
-import curationRouter from "./curating.js";
 import { CreateCuration } from "../utils/structs.js";
 
-curationRouter
+const styleRouter = express.Router();
+styleRouter
   .route("/:styleId/curations")
   .get(
     asyncHandler(async (req, res) => {
