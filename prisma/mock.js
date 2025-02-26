@@ -44,8 +44,8 @@ export const STYLES = [
   },
 ];
 
-// Curating
-export const CURATINGS = [
+// Curation
+export const CURATIONS = [
   {
     id: "e36283f5-20dc-4c7a-9161-486a79ce5f2d",
     nickname: "reviewerA",
@@ -91,21 +91,21 @@ export const COMMENTS = [
     password: "comment123",
     content: "저도 이 스타일 너무 좋아해요!",
     createdAt: new Date("2024-02-02T14:00:00Z"),
-    curatingId: "e36283f5-20dc-4c7a-9161-486a79ce5f2d",
+    curationId: "e36283f5-20dc-4c7a-9161-486a79ce5f2d",
   },
   {
     id: "342fe7fc-df3b-4d27-82bc-ec7bec7bd2cb",
     password: "comment456",
     content: "이런 코디 참고해야겠어요.",
     createdAt: new Date("2024-02-06T17:00:00Z"),
-    curatingId: "9867a7ec-60af-4210-8227-05292c58b2e8",
+    curationId: "9867a7ec-60af-4210-8227-05292c58b2e8",
   },
   {
     id: "3ad13ff8-0298-4330-aba6-66f6f150d79f",
     password: "comment789",
     content: "스트릿 감성이 최고죠!",
     createdAt: new Date("2024-02-11T12:00:00Z"),
-    curatingId: "3e131844-0e2b-4df6-9d44-a384bbca5c4a",
+    curationId: "3e131844-0e2b-4df6-9d44-a384bbca5c4a",
   },
 ];
 

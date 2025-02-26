@@ -1,12 +1,12 @@
 import { PrismaClient } from "@prisma/client";
-import { STYLES, CURATINGS, COMMENTS, STYLEITEMS } from "./mock.js";
+import { STYLES, CURATIONS, COMMENTS, STYLEITEMS } from "./mock.js";
 
 const prisma = new PrismaClient();
 
 async function main() {
   // 기존 데이터 삭제
   await prisma.style.deleteMany();
-  await prisma.curating.deleteMany();
+  await prisma.curation.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.styleItem.deleteMany();
 
@@ -16,8 +16,8 @@ async function main() {
     skipDuplicates: true,
   });
 
-  await prisma.curating.createMany({
-    data: CURATINGS,
+  await prisma.curation.createMany({
+    data: CURATIONS,
     skipDuplicates: true,
   });
 
