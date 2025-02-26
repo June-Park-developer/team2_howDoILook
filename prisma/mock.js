@@ -110,7 +110,7 @@ export const COMMENTS = [
 ];
 
 // StyleItem
-export const STYLEITEMS = [
+export const CATEGORIES = [
   {
     id: "c81e728d-9e1b-11eb-a8b3-0242ac130001",
     type: "TOP",
