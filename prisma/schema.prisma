@@ -52,16 +52,16 @@ model Comment {
 }
 
 model Category {
-  id      String        @id @default(uuid())
-  type    StyleItemType
+  id      String       @id @default(uuid())
+  type    CategoryType
   name    String
   brand   String
   price   Float
-  style   Style         @relation(fields: [styleId], references: [id], onDelete: Cascade)
+  style   Style        @relation(fields: [styleId], references: [id], onDelete: Cascade)
   styleId String
 }
 
-enum StyleItemType {
+enum CategoryType {
   TOP
   BOTTOM
   OUTER
