@@ -17,14 +17,14 @@ curationRouter.route("/:curationId/comments").post(
         password: req.body.password,
         curationId: curationId,
       },
+      select: {
+        id: true,
+        password: true,
+        content: true,
+        createdAt: true,
+      },
     });
-    const returnJson = {
-      id: comment.id,
-      password: comment.password,
-      content: comment.content,
-      createdAt: comment.createdAt,
-    };
-    res.send(returnJson);
+    res.send(comment);
   })
 );
 
