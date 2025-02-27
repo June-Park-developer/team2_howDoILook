@@ -33,7 +33,12 @@ styleRouter
         take: parseInt(pageSize),
         where: { ...search, styleId },
       });
-      res.json(curations);
+      const totalItemCount = await prisma.curation.count({
+        where: { ...search, styleId },
+      });
+      const totalPages = Math.ceil(totalItemCount / pageSize);
+      const currentPage = parseInt(page);
+      res.json({ currentPage, totalPages, totalItemCount, data: curations });
     })
   )
   .post(
