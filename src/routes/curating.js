@@ -4,6 +4,7 @@ import { assert } from "superstruct";
 import { Password, PatchCuration } from "../utils/structs.js";
 import { CreateComment } from "../utils/structs.js";
 import prisma from "../utils/prismaClient.js";
+import confirmPassword from "../utils/confirmPassword.js";
 
 const curationRouter = express.Router();
 
@@ -14,14 +15,8 @@ curationRouter
       assert(req.body, PatchCuration);
       const { curationId } = req.params;
       const { password } = req.body;
-      const matchingCuration = await prisma.curation.findUniqueOrThrow({
-        where: { id: curationId },
-      });
-      if (matchingCuration.password !== password) {
-        const e = new Error();
-        e.name = "PasswordError";
-        throw e; // To-do: util 화 하기
-      }
+      const modelName = await prisma.curation.getName();
+      await confirmPassword(modelName, curationId, password);
       const curation = await prisma.curation.update({
         where: { id: curationId },
         data: req.body,
@@ -34,15 +29,9 @@ curationRouter
       assert(req.body, Password);
       const { curationId } = req.params;
       const { password } = req.body;
-      const matchingCuration = await prisma.curation.findUniqueOrThrow({
-        where: { id: curationId },
-      });
-      if (matchingCuration.password !== password) {
-        const e = new Error();
-        e.name = "PasswordError";
-        throw e;
-      }
-      const curation = await prisma.curation.delete({
+      const modelName = await prisma.curation.getName();
+      await confirmPassword(modelName, curationId, password);
+      await prisma.curation.delete({
         where: { id: curationId },
       });
       res.json({ message: "큐레이팅 삭제 끝" });
