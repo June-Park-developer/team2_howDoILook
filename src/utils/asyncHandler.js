@@ -8,17 +8,21 @@ export default function asyncHandler(handler) {
       console.log("Error occured");
       console.log(e);
       if (
-        e.name === "StructError" || // 1.
+        e.name === "StructError" ||
         (e instanceof Prisma.PrismaClientKnownRequestError &&
-          e.code === "P2002") || // 2.
-        e instanceof Prisma.PrismaClientValidationError // 3.
+          e.code === "P2002") ||
+        e instanceof Prisma.PrismaClientValidationError ||
+        (e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === "P2003")
       ) {
-        res.status(400).send({ message: e.message });
+        res.status(400).send({ message: "잘못된 요청입니다" });
       } else if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === "P2025"
       ) {
-        res.status(404).send({ message: e.message });
+        res.status(404).send({ message: "존재하지 않습니다" });
+      } else if (e.name === "PasswordError") {
+        res.status(403).send({ message: "비밀번호가 틀렸습니다" });
       } else {
         res.status(500).send({ message: e.message });
       }
