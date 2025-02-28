@@ -1,6 +1,7 @@
 import * as s from "superstruct";
 
-<<<<<<< HEAD
+const pwPattern = s.pattern(s.string(), /(?=.*[a-zA-Z])(?=.*[0-9]).{8,16}/);
+
 const isIntegerInRange = (value) =>
   Number.isInteger(value) && value >= 1 && value <= 10;
 const IntegerInRange = s.define("IntegerInRange", isIntegerInRange);
@@ -16,8 +17,6 @@ export const CreateCuration = s.object({
 });
 
 export const PatchCuration = s.partial(CreateCuration);
-=======
-const pwPattern = s.pattern(s.string(), /(?=.*[a-zA-Z])(?=.*[0-9]).{8,16}/);
 
 export const CreateComment = s.object({
   content: s.size(s.string(), 1, 150),
@@ -27,4 +26,3 @@ export const CreateComment = s.object({
 export const Password = s.object({
   password: pwPattern,
 });
->>>>>>> main

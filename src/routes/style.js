@@ -1,8 +1,8 @@
 import express from "express";
-import asyncHandler from "../async-handler.js";
-import { PrismaClient } from "@prisma/client";
+import asyncHandler from "../utils/asyncHandler.js";
 import { assert } from "superstruct";
 import { CreateCuration } from "../utils/structs.js";
+import prisma from "../utils/prismaClient.js";
 
 const styleRouter = express.Router();
 styleRouter
@@ -26,7 +26,9 @@ styleRouter
           search = { content: { contains: keyword } };
           break;
         default:
-          const e = new Error(); // To-do : 어떤 에러 던질지 결정
+          const e = new Error();
+          e.name = "BadRequest"; // ? : 쿼리 가 이상하다는 걸 구체적으로 알려줄 수 없을까?
+          throw e;
       }
       const curations = await prisma.curation.findMany({
         skip: offset,
@@ -56,3 +58,5 @@ styleRouter
       res.status(201).json(curation);
     })
   );
+
+export default styleRouter;

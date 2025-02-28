@@ -2,12 +2,13 @@ import express from "express";
 import asyncHandler from "../utils/asyncHandler.js";
 import { assert } from "superstruct";
 import { Password, PatchCuration } from "../utils/structs.js";
+import { CreateComment } from "../utils/structs.js";
+import prisma from "../utils/prismaClient.js";
 
-const prisma = new PrismaClient();
 const curationRouter = express.Router();
 
 curationRouter
-  .route("/curations/:curationId")
+  .route("/:curationId")
   .put(
     asyncHandler(async (req, res) => {
       assert(req.body, PatchCuration);
@@ -17,7 +18,9 @@ curationRouter
         where: { id: curationId },
       });
       if (matchingCuration.password !== password) {
-        return res.status(403).json({ message: "비밀번호가 틀렸습니다." }); // util로 업데이트 하기
+        const e = new Error();
+        e.name = "PasswordError";
+        throw e; // To-do: util 화 하기
       }
       const curation = await prisma.curation.update({
         where: { id: curationId },
@@ -35,7 +38,9 @@ curationRouter
         where: { id: curationId },
       });
       if (matchingCuration.password !== password) {
-        return res.status(403).json({ message: "비밀번호가 틀렸습니다." }); // util로 업데이트하기
+        const e = new Error();
+        e.name = "PasswordError";
+        throw e;
       }
       const curation = await prisma.curation.delete({
         where: { id: curationId },
@@ -43,8 +48,6 @@ curationRouter
       res.json({ message: "큐레이팅 삭제 끝" });
     })
   );
-import { CreateComment } from "../utils/structs.js";
-import prisma from "../utils/prismaClient.js";
 
 curationRouter.route("/:curationId/comments").post(
   asyncHandler(async (req, res) => {
