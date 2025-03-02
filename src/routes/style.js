@@ -1,85 +1,55 @@
 import express from "express";
-import asyncHandler from "../async-handler.js";
-import { PrismaClient } from "@prisma/client";
-import { assert } from "superstruct";
-import { CreateProduct, PatchProduct } from "../structs.js";
+import asyncHandler from "../utils/asyncHandler";
+import prisma from "../utils/prismaClient";
 
-const prisma = new PrismaClient();
-const productRouter = express.Router();
+const styleRouter = express.Router();
 
-productRouter
-  .route("/")
-  .get(
-    asyncHandler(async (req, res) => {
-      const { offset = 0, limit = 10, order, category } = req.query;
-      let orderBy;
-      switch (order) {
-        case "priceLowest":
-          orderBy = { price: "asc" };
-          break;
-        case "priceHighest":
-          orderBy = { price: "desc" };
-          break;
-        case "oldest":
-          orderBy = { createdAt: "asc" };
-          break;
-        case "newest":
-          orderBy = { createdAt: "desc" };
-        default:
-          orderBy = { createdAt: "desc" };
-      }
-      const where = category ? { category } : {};
-      const products = await prisma.product.findMany({
-        where,
-        orderBy,
-        skip: parseInt(offset),
-        take: parseInt(limit),
-      });
-      console.log(products);
-      res.send(products);
-    })
-  )
-  .post(
-    asyncHandler(async (req, res) => {
-      assert(req.body, CreateProduct);
-      const product = await prisma.product.create({
-        data: req.body,
-      });
-      res.status(201).send(product);
-    })
-  );
+styleRouter.get(
+  "/ranking",
+  asyncHandler(async (req, res) => {
+    const { sort } = req.query;
 
-productRouter
-  .route("/:id")
-  .get(
-    asyncHandler(async (req, res) => {
-      const { id } = req.params;
-      const product = await prisma.product.findUnique({
-        where: { id },
+    const validSortOptions = [
+      "trendy",
+      "personality",
+      "practicality",
+      "costEffectiveness",
+    ];
+    if (sort && !validSortOptions.includes(sort)) {
+      return res.status(400).json({
+        message:
+          " 사용 가능한 정렬값: trendy, personality, practicality, costEffectiveness",
       });
-      console.log(product);
-      res.send(product);
-    })
-  )
-  .patch(
-    asyncHandler(async (req, res) => {
-      const { id } = req.params;
-      assert(req.body, PatchProduct);
-      const product = await prisma.product.update({
-        where: { id },
-        data: req.body,
-      });
-      res.send(product);
-    })
-  )
-  .delete(
-    asyncHandler(async (req, res) => {
-      const { id } = req.params;
-      await prisma.product.delete({
-        where: { id },
-      });
-      res.sendStatus(204);
-    })
-  );
+    }
+    const orderByOptions = {
+      trendy: { trendy: "desc" },
+      personality: { personality: "desc" },
+      practicality: { practicality: "desc" },
+      costEffectiveness: { costEffectiveness: "desc" },
+      default: { viewCount: "desc" }, //전체를 viewcount로 설정
+    };
 
-export default productRouter;
+    const orderBy = orderByOptions[sort] || orderByOptions.default;
+
+    const rankings = await prisma.style.findMany({
+      orderBy: { viewCount: "desc" },
+      select: {
+        id: true,
+        title: true,
+        nickname: true,
+        tags: true,
+        imageUrls: true,
+        viewCount: true,
+        trendy: true,
+        personality: true,
+        practicality: true,
+        costEffectiveness: true,
+        createdAt: true,
+      },
+    });
+
+    res.send(rankings);
+  })
+);
+
+export default styleRouter;
