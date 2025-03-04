@@ -13,7 +13,8 @@ export default function asyncHandler(handler) {
           e.code === "P2002") ||
         e instanceof Prisma.PrismaClientValidationError ||
         (e instanceof Prisma.PrismaClientKnownRequestError &&
-          e.code === "P2003")
+          e.code === "P2003") ||
+        e.name === "FileExtensionError"
       ) {
         res.status(400).send({ message: "잘못된 요청입니다" });
       } else if (
