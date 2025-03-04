@@ -11,11 +11,23 @@ styleRouter
     asyncHandler(async (req, res) => {
       const { styleId } = req.params;
       const {
-        page = 1,
-        pageSize = 5,
+        page = "1",
+        pageSize = "5",
         searchBy = "content",
         keyword = "",
-      } = req.query; // ? : default 값 더 개선시킬 순 없을까?
+      } = req.query;
+      const pageNum = parseFloat(page);
+      const pageSizeNum = parseFloat(pageSize);
+      if (
+        !Number.isInteger(pageNum) ||
+        pageNum < 1 ||
+        !Number.isInteger(pageSizeNum) ||
+        pageSizeNum < 1
+      ) {
+        const e = new Error();
+        e.name = "BadQuery";
+        throw e;
+      }
       const offset = parseInt(pageSize) * (parseInt(page) - 1);
       let search;
       switch (searchBy) {
@@ -27,7 +39,7 @@ styleRouter
           break;
         default:
           const e = new Error();
-          e.name = "BadRequest"; // ? : 쿼리 가 이상하다는 걸 구체적으로 알려줄 수 없을까?
+          e.name = "BadQuery";
           throw e;
       }
       const curations = await prisma.curation.findMany({

@@ -15,7 +15,7 @@ curationRouter
       assert(req.body, PatchCuration);
       const { curationId } = req.params;
       const { password } = req.body;
-      const modelName = await prisma.curation.getName();
+      const modelName = await prisma.curation.getEntityName();
       await confirmPassword(modelName, curationId, password);
       const curation = await prisma.curation.update({
         where: { id: curationId },
@@ -29,7 +29,7 @@ curationRouter
       assert(req.body, Password);
       const { curationId } = req.params;
       const { password } = req.body;
-      const modelName = await prisma.curation.getName();
+      const modelName = await prisma.curation.getEntityName();
       await confirmPassword(modelName, curationId, password);
       await prisma.curation.delete({
         where: { id: curationId },
