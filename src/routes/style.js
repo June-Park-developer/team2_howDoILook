@@ -10,20 +10,6 @@ styleRouter.get(
   asyncHandler(async (req, res) => {
     const { sort, page = 1, pageSize = 5 } = req.query;
 
-    const validSortOptions = [
-      "total",
-      "trendy",
-      "personality",
-      "practicality",
-      "costEffectiveness",
-    ];
-
-    if (sort && !validSortOptions.includes(sort)) {
-      return res.status(400).json({
-        message:
-          "잘못된 정렬 기준입니다. 사용 가능한 값: total, trendy, personality, practicality, costEffectiveness",
-      });
-    }
     const response = await fetch(
       "http://localhost:3000/curations/average-scores"
     );
@@ -48,17 +34,15 @@ styleRouter.get(
     const orderBy = orderByOptions[sort] || orderByOptions["total"];
     rankings.sort(orderBy);
 
-    const pageNum = parseInt(page);
-    const pageSizeNum = parseInt(pageSize);
     const totalItemCount = rankings.length;
-    const totalPages = Math.ceil(totalItemCount / pageSizeNum);
+    const totalPages = Math.ceil(totalItemCount / pageSize);
     const paginatedRankings = rankings.slice(
-      (pageNum - 1) * pageSizeNum,
-      pageNum * pageSizeNum
+      (page - 1) * pageSize,
+      page * pageSize
     );
 
     res.json({
-      currentPage: pageNum,
+      currentPage: parseInt(page),
       totalPages,
       totalItemCount,
       data: paginatedRankings,
