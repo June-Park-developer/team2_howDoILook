@@ -1,7 +1,7 @@
 import express from "express";
 import asyncHandler from "../utils/asyncHandler.js";
 import { assert } from "superstruct";
-import { CreateCuration } from "../utils/structs.js";
+import { CreateCuration, ValidQuery } from "../utils/structs.js";
 import prisma from "../utils/prismaClient.js";
 
 const styleRouter = express.Router();
@@ -10,24 +10,13 @@ styleRouter
   .get(
     asyncHandler(async (req, res) => {
       const { styleId } = req.params;
+      assert(req.query, ValidQuery);
       const {
         page = "1",
         pageSize = "5",
         searchBy = "content",
         keyword = "",
       } = req.query;
-      const pageNum = parseFloat(page);
-      const pageSizeNum = parseFloat(pageSize);
-      if (
-        !Number.isInteger(pageNum) ||
-        pageNum < 1 ||
-        !Number.isInteger(pageSizeNum) ||
-        pageSizeNum < 1
-      ) {
-        const e = new Error();
-        e.name = "BadQuery";
-        throw e;
-      }
       const offset = parseInt(pageSize) * (parseInt(page) - 1);
       let search;
       switch (searchBy) {
