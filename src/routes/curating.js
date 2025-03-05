@@ -34,7 +34,7 @@ curationRouter
       await prisma.curation.delete({
         where: { id: curationId },
       });
-      res.json({ message: "큐레이팅 삭제 끝" });
+      res.json({ message: "큐레이팅 삭제 성공" });
     })
   );
 
