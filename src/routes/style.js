@@ -1,82 +1,88 @@
 import express from "express";
-import asyncHandler from "../async-handler.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import { PrismaClient } from "@prisma/client";
 import { assert } from "superstruct";
-import { CreateProduct, PatchProduct } from "../structs.js";
+import { CreateStyle, PatchStyle } from "../utils/structs.js";
 
 const prisma = new PrismaClient();
 const productRouter = express.Router();
 
+// 스타일 목록 조회, 등록
 productRouter
-  .route("/")
+  .route("/styles")
   .get(
     asyncHandler(async (req, res) => {
-      const { offset = 0, limit = 10, order, category } = req.query;
-      let orderBy;
-      switch (order) {
-        case "priceLowest":
-          orderBy = { price: "asc" };
-          break;
-        case "priceHighest":
-          orderBy = { price: "desc" };
-          break;
-        case "oldest":
-          orderBy = { createdAt: "asc" };
-          break;
-        case "newest":
-          orderBy = { createdAt: "desc" };
-        default:
-          orderBy = { createdAt: "desc" };
-      }
-      const where = category ? { category } : {};
-      const products = await prisma.product.findMany({
-        where,
-        orderBy,
-        skip: parseInt(offset),
-        take: parseInt(limit),
+      const { offset = 0, limit = 10 } = req.query;
+      const styles = await prisma.style.findMany({
+        skip: parseInt(offset) || 0,
+        take: parseInt(limit) || 10,
       });
-      console.log(products);
-      res.send(products);
+      res.send(styles);
     })
   )
   .post(
     asyncHandler(async (req, res) => {
-      assert(req.body, CreateProduct);
-      const product = await prisma.product.create({
-        data: req.body,
+      assert(req.body, CreateStyle);
+      const { name, description, color } = req.body;
+
+      const existingStyle = await prisma.style.findUnique({
+        where: { name },
       });
-      res.status(201).send(product);
+
+      if (existingStyle) {
+        return res.status(409).json({ error: "Style name already exists" });
+      }
+
+      const newStyle = await prisma.style.create({
+        data: {
+          name,
+          description: description || "",
+          color,
+        },
+      });
+
+      res.status(201).json(newStyle);
     })
   );
 
+// 스타일 상세 조회, 수정, 삭제
 productRouter
-  .route("/:id")
+  .route("/styles/:id")
   .get(
     asyncHandler(async (req, res) => {
       const { id } = req.params;
-      const product = await prisma.product.findUnique({
-        where: { id },
+      const style = await prisma.style.findUnique({
+        where: { id: parseInt(id) },
       });
-      console.log(product);
-      res.send(product);
+      if (!style) {
+        return res.status(404).json({ error: "Style not found" });
+      }
+      res.send(style);
     })
   )
   .patch(
     asyncHandler(async (req, res) => {
+      assert(req.body, PatchStyle);
       const { id } = req.params;
-      assert(req.body, PatchProduct);
-      const product = await prisma.product.update({
-        where: { id },
-        data: req.body,
+      const { name, description, color } = req.body;
+
+      const updatedStyle = await prisma.style.update({
+        where: { id: parseInt(id) },
+        data: {
+          name,
+          description,
+          color,
+        },
       });
-      res.send(product);
+
+      res.send(updatedStyle);
     })
   )
   .delete(
     asyncHandler(async (req, res) => {
       const { id } = req.params;
-      await prisma.product.delete({
-        where: { id },
+      await prisma.style.delete({
+        where: { id: parseInt(id) },
       });
       res.sendStatus(204);
     })
