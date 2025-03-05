@@ -5,17 +5,17 @@ import { assert } from "superstruct";
 import { CreateStyle, PatchStyle } from "../utils/structs.js";
 
 const prisma = new PrismaClient();
-const productRouter = express.Router();
+const styleRouter = express.Router();
 
 // 스타일 목록 조회, 등록
-productRouter
+styleRouter
   .route("/styles")
   .get(
     asyncHandler(async (req, res) => {
       const { offset = 0, limit = 10 } = req.query;
       const styles = await prisma.style.findMany({
-        skip: parseInt(offset) || 0,
-        take: parseInt(limit) || 10,
+        skip: parseInt(offset),
+        take: parseInt(limit),
       });
       res.send(styles);
     })
@@ -23,10 +23,10 @@ productRouter
   .post(
     asyncHandler(async (req, res) => {
       assert(req.body, CreateStyle);
-      const { name, description, color } = req.body;
+      const { title, description, color } = req.body;
 
       const existingStyle = await prisma.style.findUnique({
-        where: { name },
+        where: { title },
       });
 
       if (existingStyle) {
@@ -35,7 +35,7 @@ productRouter
 
       const newStyle = await prisma.style.create({
         data: {
-          name,
+          title,
           description: description || "",
           color,
         },
@@ -46,7 +46,7 @@ productRouter
   );
 
 // 스타일 상세 조회, 수정, 삭제
-productRouter
+styleRouter
   .route("/styles/:id")
   .get(
     asyncHandler(async (req, res) => {
@@ -88,4 +88,4 @@ productRouter
     })
   );
 
-export default productRouter;
+export default styleRouter;
