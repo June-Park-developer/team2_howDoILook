@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { PrismaClient } from "@prisma/client";
 import { assert } from "superstruct";
 import { CreateStyle, PatchStyle } from "../utils/structs.js";
+import confirmPassword from "../utils/confirmPassword.js";
 
 const prisma = new PrismaClient();
 const styleRouter = express.Router();
@@ -60,7 +61,7 @@ styleRouter
       res.send(style);
     })
   )
-  .patch(
+  .put(
     asyncHandler(async (req, res) => {
       assert(req.body, PatchStyle);
       const { id } = req.params;
