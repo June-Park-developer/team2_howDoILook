@@ -1,85 +1,63 @@
 import express from "express";
-import asyncHandler from "../async-handler.js";
-import { PrismaClient } from "@prisma/client";
+import asyncHandler from "../utils/asyncHandler.js";
 import { assert } from "superstruct";
-import { CreateProduct, PatchProduct } from "../structs.js";
+import { CreateCuration, ValidQuery } from "../utils/structs.js";
+import prisma from "../utils/prismaClient.js";
 
-const prisma = new PrismaClient();
-const productRouter = express.Router();
-
-productRouter
-  .route("/")
+const styleRouter = express.Router();
+styleRouter
+  .route("/:styleId/curations")
   .get(
     asyncHandler(async (req, res) => {
-      const { offset = 0, limit = 10, order, category } = req.query;
-      let orderBy;
-      switch (order) {
-        case "priceLowest":
-          orderBy = { price: "asc" };
+      const { styleId } = req.params;
+      assert(req.query, ValidQuery);
+      const {
+        page = "1",
+        pageSize = "5",
+        searchBy = "content",
+        keyword = "",
+      } = req.query;
+      const offset = parseInt(pageSize) * (parseInt(page) - 1);
+      let search;
+      switch (searchBy) {
+        case "nickname":
+          search = { nickname: { contains: keyword } };
           break;
-        case "priceHighest":
-          orderBy = { price: "desc" };
+        case "content":
+          search = { content: { contains: keyword } };
           break;
-        case "oldest":
-          orderBy = { createdAt: "asc" };
-          break;
-        case "newest":
-          orderBy = { createdAt: "desc" };
         default:
-          orderBy = { createdAt: "desc" };
+          const e = new Error();
+          e.name = "BadQuery";
+          throw e;
       }
-      const where = category ? { category } : {};
-      const products = await prisma.product.findMany({
-        where,
-        orderBy,
-        skip: parseInt(offset),
-        take: parseInt(limit),
+      const curations = await prisma.curation.findMany({
+        skip: offset,
+        take: parseInt(pageSize),
+        where: { ...search, styleId },
       });
-      console.log(products);
-      res.send(products);
+      const totalItemCount = await prisma.curation.count({
+        where: { ...search, styleId },
+      });
+      const totalPages = Math.ceil(totalItemCount / pageSize);
+      const currentPage = parseInt(page);
+      res.json({ currentPage, totalPages, totalItemCount, data: curations });
     })
   )
   .post(
     asyncHandler(async (req, res) => {
-      assert(req.body, CreateProduct);
-      const product = await prisma.product.create({
-        data: req.body,
+      assert(req.body, CreateCuration);
+      const { styleId } = req.params;
+      const curation = await prisma.curation.create({
+        data: {
+          ...req.body,
+          style: {
+            connect: { id: styleId },
+          },
+        },
       });
-      res.status(201).send(product);
+      res.status(201).json(curation);
     })
   );
 
-productRouter
-  .route("/:id")
-  .get(
-    asyncHandler(async (req, res) => {
-      const { id } = req.params;
-      const product = await prisma.product.findUnique({
-        where: { id },
-      });
-      console.log(product);
-      res.send(product);
-    })
-  )
-  .patch(
-    asyncHandler(async (req, res) => {
-      const { id } = req.params;
-      assert(req.body, PatchProduct);
-      const product = await prisma.product.update({
-        where: { id },
-        data: req.body,
-      });
-      res.send(product);
-    })
-  )
-  .delete(
-    asyncHandler(async (req, res) => {
-      const { id } = req.params;
-      await prisma.product.delete({
-        where: { id },
-      });
-      res.sendStatus(204);
-    })
-  );
-
-export default productRouter;
+export default styleRouter;
